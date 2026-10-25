@@ -14,7 +14,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const config = readFileSync(join(root, "wrangler.jsonc"), "utf8");
 
 const databaseId = config.match(/"database_id"\s*:\s*"([^"]*)"/)?.[1] ?? "";
-const bucketName = config.match(/"bucket_name"\s*:\s*"([^"]*)"/)?.[1] ?? "";
+const kvBlock = config.match(/"kv_namespaces"\s*:\s*\[([\s\S]*?)\]/)?.[1] ?? "";
+const kvNamespaceId = kvBlock.match(/"id"\s*:\s*"([^"]*)"/)?.[1] ?? "";
 const problems = [];
 
 if (!databaseId) {
@@ -25,8 +26,8 @@ if (!databaseId) {
   );
 }
 
-if (!bucketName) {
-  problems.push("wrangler.jsonc is missing r2_buckets[0].bucket_name.");
+if (!kvNamespaceId) {
+  problems.push("wrangler.jsonc is missing kv_namespaces[0].id (the IMAGES binding).");
 }
 
 if (problems.length > 0) {
@@ -39,7 +40,8 @@ Create the Cloudflare resources first (once per account):
   1. npx wrangler login
   2. npx wrangler d1 create bank9-db
   3. Copy the "database_id" printed by step 2 into wrangler.jsonc
-  4. npx wrangler r2 bucket create bank9-images
+  4. npx wrangler kv namespace create bank9-images
+  5. Copy the KV namespace "id" printed by step 4 into wrangler.jsonc
 
 Then configure production secrets:
 
@@ -58,10 +60,10 @@ Finally deploy:
 
 Important: deploy this project as a Cloudflare Worker (Workers Builds or
 "wrangler deploy"), NOT as a Cloudflare Pages site. The app needs the Worker
-runtime, D1, R2 and a cron trigger; a static Pages deployment only serves the
+runtime, D1, KV and a cron trigger; a static Pages deployment only serves the
 source files and shows a blank page.
 `);
   process.exit(1);
 }
 
-console.log("Deploy preflight OK: D1 database_id and R2 bucket are configured.");
+console.log("Deploy preflight OK: D1 database_id and KV namespace id are configured.");

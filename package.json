@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Bank9 Tech - demo e-commerce for phones, laptops and PCs on Cloudflare Workers, D1 and R2",
+  "description": "Bank9 Tech - demo e-commerce for phones, laptops and PCs on Cloudflare Workers, D1 and KV",
   "engines": {
     "node": ">=22.12.0"
   },

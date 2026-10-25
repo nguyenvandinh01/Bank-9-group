@@ -1,0 +1,3 @@
+# The static Pages project cannot run the Worker/D1/KV backend.
+# Redirect the old pages.dev URL to the deployed Worker.
+/* https://bank-9-group.zoro9x9x9x.workers.dev/:splat 302

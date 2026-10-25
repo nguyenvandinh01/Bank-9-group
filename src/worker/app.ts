@@ -217,13 +217,16 @@ export function createApp() {
   app.get("/api/images/:key", async (c) => {
     const key = c.req.param("key");
     if (!/^[a-zA-Z0-9._-]+$/.test(key)) throw badRequest("Tên tệp không hợp lệ");
-    const object = await c.env.IMAGES.get(`uploads/${key}`);
-    if (!object) throw notFound("Không tìm thấy hình ảnh");
+    const object = await c.env.IMAGES.getWithMetadata<{ contentType: string }>(
+      `uploads/${key}`,
+      "arrayBuffer",
+    );
+    if (!object.value) throw notFound("Không tìm thấy hình ảnh");
     const headers = new Headers();
-    object.writeHttpMetadata(headers);
-    headers.set("etag", object.httpEtag);
+    headers.set("Content-Type", object.metadata?.contentType ?? "application/octet-stream");
+    headers.set("ETag", `"${key}"`);
     headers.set("Cache-Control", "public, max-age=31536000, immutable");
-    return new Response(object.body, { headers });
+    return new Response(object.value, { headers });
   });
 
   app.post("/api/admin/login", async (c) => {
@@ -409,7 +412,7 @@ export function createApp() {
 
     const key = `${Date.now().toString(36)}-${randomHex(8)}.${extension}`;
     await c.env.IMAGES.put(`uploads/${key}`, await file.arrayBuffer(), {
-      httpMetadata: { contentType: file.type },
+      metadata: { contentType: file.type },
     });
     return ok(c, { url: `/api/images/${key}` }, 201);
   });

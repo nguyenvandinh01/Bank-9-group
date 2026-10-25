@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "bank9-tech",
+  "name": "bank-9-group",
+  "workers_dev": true,
   "main": "./src/worker/index.ts",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
@@ -20,14 +21,15 @@
       "database_name": "bank9-db",
       // Replace with the ID returned by: npx wrangler d1 create bank9-db
       // Kept as a placeholder so local dev works without a Cloudflare account.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "3fd821fc-0303-4990-8729-5d009e490ec3",
       "migrations_dir": "./migrations"
     }
   ],
-  "r2_buckets": [
+  "kv_namespaces": [
     {
       "binding": "IMAGES",
-      "bucket_name": "bank9-images"
+      // Created with: npx wrangler kv namespace create bank9-images
+      "id": "1ee0a7bf30524ba39d833a5037b04b7a"
     }
   ],
   "triggers": {

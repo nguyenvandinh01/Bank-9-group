@@ -1,6 +1,6 @@
 export interface AppEnv {
   DB: D1Database;
-  IMAGES: R2Bucket;
+  IMAGES: KVNamespace;
   ASSETS: Fetcher;
   ENVIRONMENT: string;
   SHOP_NAME: string;

@@ -1,6 +1,6 @@
 # Bank9 Tech
 
-Web app thương mại điện tử demo bán điện thoại, laptop và máy tính, chạy hoàn toàn trên Cloudflare: **Workers + D1 + R2**, giao diện React + TypeScript + Tailwind CSS.
+Web app thương mại điện tử demo bán điện thoại, laptop và máy tính, chạy hoàn toàn trên Cloudflare: **Workers + D1 + KV**, giao diện React + TypeScript + Tailwind CSS.
 
 Dự án phục vụ demo nội bộ: có storefront, trang quản trị, thanh toán chuyển khoản QR nội địa (VietQR, admin xác nhận thủ công) và COD. Không tích hợp cổng thanh toán hay đơn vị vận chuyển thật.
 
@@ -17,7 +17,7 @@ Dự án phục vụ demo nội bộ: có storefront, trang quản trị, thanh 
 **Quản trị**
 - Đăng nhập bằng session cookie ký HMAC-SHA256, rate limit đăng nhập.
 - Dashboard doanh thu, đơn chờ xử lý, tồn kho thấp, đơn gần đây.
-- CRUD sản phẩm (soft delete), biến thể, tồn kho, ảnh (upload R2).
+- CRUD sản phẩm (soft delete), biến thể, tồn kho, ảnh (upload KV).
 - CRUD danh mục/thương hiệu, chặn xóa khi còn sản phẩm.
 - Xử lý đơn: xác nhận thanh toán QR, chuyển trạng thái, nhập mã vận đơn.
 - Cấu hình cửa hàng và tài khoản nhận chuyển khoản dùng cho VietQR.
@@ -36,7 +36,7 @@ Dự án phục vụ demo nội bộ: có storefront, trang quản trị, thanh 
 | Runtime | Cloudflare Workers (free plan) |
 | API | Hono + Zod |
 | Database | Cloudflare D1 (SQLite), Drizzle schema + SQL migrations |
-| File | Cloudflare R2 |
+| File | Cloudflare KV |
 | Frontend | React 19, React Router, TanStack Query, Zustand, Tailwind CSS v4 |
 | Build | Vite 8 + `@cloudflare/vite-plugin` |
 | Test | Vitest (unit) + script kiểm thử oversell qua HTTP |
@@ -87,7 +87,7 @@ Chi tiết dữ liệu mẫu: [docs/seed-data.md](docs/seed-data.md).
 
 | Lệnh | Mô tả |
 | --- | --- |
-| `npm run dev` | Vite dev server + Worker local, D1/R2 local (có preflight kiểm tra Node/`.dev.vars`) |
+| `npm run dev` | Vite dev server + Worker local, D1/KV local (có preflight kiểm tra Node/`.dev.vars`) |
 | `npm run build` | Typecheck và build worker + client vào `dist/` |
 | `npm run preview` | Xem bản build local |
 | `npm run typecheck` | `tsc -b` cho client, worker, config |
@@ -140,7 +140,7 @@ Route `POST /api/dev/run-expiry` chỉ hoạt động khi `ENVIRONMENT=developme
 
 ## Deploy lên Cloudflare
 
-> **Quan trọng:** đây là **Cloudflare Worker** (Vite + Worker + D1 + R2 + cron), không phải site tĩnh. **Không deploy bằng Cloudflare Pages.** Nếu connect repo vào Pages, Pages chỉ phục vụ nguyên source (`/src/client/main.tsx`) nên trang trắng và mọi `/api/*` đều trả về HTML.
+> **Quan trọng:** đây là **Cloudflare Worker** (Vite + Worker + D1 + KV + cron), không phải site tĩnh. **Không deploy bằng Cloudflare Pages.** Nếu connect repo vào Pages, Pages chỉ phục vụ nguyên source (`/src/client/main.tsx`) nên trang trắng và mọi `/api/*` đều trả về HTML.
 
 ### Cách 1 — Deploy từ máy local
 
@@ -149,10 +149,17 @@ Route `POST /api/dev/run-expiry` chỉ hoạt động khi `ENVIRONMENT=developme
 ```bash
 npx wrangler login
 npx wrangler d1 create bank9-db
-npx wrangler r2 bucket create bank9-images
+npx wrangler kv namespace create bank9-images
 ```
 
-2. Cập nhật `database_id` trong `wrangler.jsonc` bằng ID do lệnh `d1 create` trả về. (Repo để ID giả `00000000-...` cho tiện chạy local; deploy với ID giả sẽ lỗi.)
+2. Cập nhật `wrangler.jsonc` bằng ID do 2 lệnh trên trả về:
+
+```jsonc
+"d1_databases": [{ "binding": "DB", "database_name": "bank9-db", "database_id": "<D1_ID>" }],
+"kv_namespaces": [{ "binding": "IMAGES", "id": "<KV_NAMESPACE_ID>" }]
+```
+
+(Repo để ID mẫu cho tiện chạy local; deploy với ID giả sẽ lỗi.)
 
 3. Đặt secret cho môi trường production (không dùng giá trị demo):
 
@@ -176,17 +183,17 @@ npm run deploy:check
 npm run deploy
 ```
 
-`deploy:check` sẽ báo lỗi rõ ràng nếu `database_id` vẫn còn là ID giả. Sau khi deploy, Worker chạy tại `https://bank9-tech.<tài-khoản>.workers.dev` (hoặc domain gắn trong dashboard).
+`deploy:check` sẽ báo lỗi rõ ràng nếu `database_id` hoặc KV namespace id vẫn còn là ID giả. Sau khi deploy, Worker chạy tại `https://bank-9-group.<account-subdomain>.workers.dev` (hoặc domain gắn trong dashboard).
 
 ### Cách 2 — Deploy tự động từ GitHub (Workers Builds)
 
 1. Cloudflare dashboard → **Workers & Pages** → **Create** → **Workers** → **Connect to Git** (không chọn Pages).
-2. Chọn repo `Bank-9-group`, branch `main`.
+2. Chọn repo `Bank-9-group`, branch `main`. Tên Worker trên dashboard phải trùng `name` trong `wrangler.jsonc` (`bank-9-group`).
 3. Build command: `npm run build`; Deploy command: `npm run deploy`.
-4. Tạo D1/R2 và cập nhật `database_id` như Cách 1; thêm `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `SESSION_SECRET` trong **Settings → Variables and Secrets**.
+4. Tạo D1/KV và cập nhật ID như Cách 1; thêm `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `SESSION_SECRET` trong **Settings → Variables and Secrets**.
 5. Mỗi lần push lên `main`, Cloudflare build và deploy lại.
 
-Nếu repo đã có project Pages `bank-9-group` (trang `bank-9-group.pages.dev`), hãy xóa project đó trong dashboard — nó không thể chạy backend Worker/D1/R2 của app này.
+Nếu repo đã có project Pages `bank-9-group` (trang `bank-9-group.pages.dev`), hãy xóa project đó trong dashboard — nó không thể chạy backend Worker/D1/KV của app này.
 
 `ENVIRONMENT` trong `wrangler.jsonc` là `production`. Khi chạy local, `.dev.vars` ghi đè thành `development`.
 
@@ -198,9 +205,9 @@ Nếu repo đã có project Pages `bank-9-group` (trang `bank-9-group.pages.dev`
 | `Couldn't find a D1 DB with ID ...` | `database_id` trong `wrangler.jsonc` vẫn là ID giả hoặc chưa tạo D1. Chạy `npx wrangler d1 create bank9-db` rồi cập nhật ID. |
 | Mở web được nhưng API 500 / không có sản phẩm | Chưa chạy `npm run db:migrate:remote` + `npm run db:seed:remote`, hoặc thiếu secret production. |
 | Đăng nhập admin thất bại | Chưa đặt `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `SESSION_SECRET` bằng `wrangler secret put`. |
-| Upload ảnh lỗi | Chưa tạo bucket R2 `bank9-images` hoặc binding không khớp. |
+| Upload ảnh lỗi | Chưa tạo KV namespace `bank9-images` hoặc `kv_namespaces[0].id` trong `wrangler.jsonc` không khớp. |
 
-Lưu ý free plan: mỗi request có giới hạn CPU, cron chạy mỗi 5 phút. Ảnh demo là SVG tĩnh trong `public/seed/`; ảnh admin upload nằm trong R2.
+Lưu ý free plan: mỗi request có giới hạn CPU, cron chạy mỗi 5 phút. Ảnh demo là SVG tĩnh trong `public/seed/`; ảnh admin upload nằm trong KV.
 
 ## Kiểm thử
 
