@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800" role="img" aria-label="HP Spectre x360">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#312e81"/>
+    </linearGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#bg)"/>
+  <circle cx="640" cy="160" r="190" fill="#ffffff" opacity="0.08"/>
+  <circle cx="160" cy="660" r="230" fill="#000000" opacity="0.14"/>
+  <rect x="90" y="90" width="620" height="620" rx="48" fill="url(#gloss)" opacity="0.25"/>
+  <text x="400" y="380" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="52" font-weight="700" fill="#ffffff">HP Spectre x360</text>
+  <text x="400" y="446" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="30" fill="#ffffff" opacity="0.8">2.8K OLED</text>
+  <text x="400" y="620" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="26" letter-spacing="6" fill="#ffffff" opacity="0.55">BANK9 TECH</text>
+</svg>

@@ -1,0 +1,5 @@
+# Local demo secrets. Never commit real credentials.
+ENVIRONMENT=development
+ADMIN_EMAIL=admin@bank9.local
+ADMIN_PASSWORD=Bank9@Demo2026!
+SESSION_SECRET=local-demo-session-secret-change-me-please
