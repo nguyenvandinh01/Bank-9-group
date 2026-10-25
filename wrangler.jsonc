@@ -18,6 +18,8 @@
     {
       "binding": "DB",
       "database_name": "bank9-db",
+      // Replace with the ID returned by: npx wrangler d1 create bank9-db
+      // Kept as a placeholder so local dev works without a Cloudflare account.
       "database_id": "00000000-0000-0000-0000-000000000000",
       "migrations_dir": "./migrations"
     }

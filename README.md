@@ -41,7 +41,7 @@ Dự án phục vụ demo nội bộ: có storefront, trang quản trị, thanh 
 | Build | Vite 8 + `@cloudflare/vite-plugin` |
 | Test | Vitest (unit) + script kiểm thử oversell qua HTTP |
 
-Yêu cầu: Node.js **22+** (khuyến nghị 24) và npm. Không cần tài khoản Cloudflare để chạy local.
+Yêu cầu: Node.js **22.12+** (khuyến nghị 24) và npm. Không cần tài khoản Cloudflare để chạy local.
 
 ## Chạy local
 
@@ -56,11 +56,19 @@ npm run db:seed:local
 npm run dev
 ```
 
-Mở http://localhost:5173.
+Mở http://127.0.0.1:5173.
 
-- Admin: http://localhost:5173/admin/login
+- Admin: http://127.0.0.1:5173/admin/login
 - Email: `admin@bank9.local`
 - Mật khẩu: `Bank9@Demo2026!`
+
+Mỗi lần chạy `npm run dev`, preflight `scripts/check-env.mjs` sẽ kiểm tra phiên bản Node và tự tạo `.dev.vars` từ file mẫu nếu chưa có.
+
+**Lưu ý khi localhost báo `ERR_CONNECTION_REFUSED`:**
+
+- Terminal phải đang chạy `npm run dev`; đóng terminal hoặc nhấn Ctrl+C thì server dừng và trình duyệt báo lỗi này.
+- Chờ log hiện dòng `Local: http://127.0.0.1:5173/` rồi mới mở trình duyệt (lần đầu Worker local khởi động hơi lâu).
+- Nếu cổng 5173 đang bị tiến trình cũ chiếm, Vite sẽ thoát do `strictPort: true`. Tắt tiến trình cũ rồi chạy lại.
 
 Thông tin đăng nhập và `SESSION_SECRET` trong `.dev.vars` chỉ dùng cho local; file này đã được gitignore.
 
@@ -79,7 +87,7 @@ Chi tiết dữ liệu mẫu: [docs/seed-data.md](docs/seed-data.md).
 
 | Lệnh | Mô tả |
 | --- | --- |
-| `npm run dev` | Vite dev server + Worker local, D1/R2 local |
+| `npm run dev` | Vite dev server + Worker local, D1/R2 local (có preflight kiểm tra Node/`.dev.vars`) |
 | `npm run build` | Typecheck và build worker + client vào `dist/` |
 | `npm run preview` | Xem bản build local |
 | `npm run typecheck` | `tsc -b` cho client, worker, config |
@@ -90,7 +98,8 @@ Chi tiết dữ liệu mẫu: [docs/seed-data.md](docs/seed-data.md).
 | `npm run db:reset:local` | Xóa dữ liệu local (giữ schema) |
 | `npm run db:migrate:remote` | Áp migrations D1 remote |
 | `npm run db:seed:remote` | Nạp seed lên D1 remote (chỉ nên chạy một lần trên DB mới) |
-| `npm run deploy` | Build rồi `wrangler deploy` |
+| `npm run deploy:check` | Kiểm tra `wrangler.jsonc` đã có D1 `database_id` thật chưa |
+| `npm run deploy` | Kiểm tra config, build rồi `wrangler deploy` |
 | `npm run seed:generate` | Tạo lại ảnh SVG placeholder trong `public/seed/` |
 
 `test:oversell` cần `npm run dev` đang chạy. Mặc định gọi `http://localhost:5173`, có thể đổi bằng biến môi trường `BASE_URL`; script chọn một variant còn đúng 1 hàng, bắn 5 checkout đồng thời, kỳ vọng đúng 1 đơn được tạo, sau đó hủy đơn để hoàn kho.
@@ -131,7 +140,11 @@ Route `POST /api/dev/run-expiry` chỉ hoạt động khi `ENVIRONMENT=developme
 
 ## Deploy lên Cloudflare
 
-1. Đăng nhập và tạo tài nguyên:
+> **Quan trọng:** đây là **Cloudflare Worker** (Vite + Worker + D1 + R2 + cron), không phải site tĩnh. **Không deploy bằng Cloudflare Pages.** Nếu connect repo vào Pages, Pages chỉ phục vụ nguyên source (`/src/client/main.tsx`) nên trang trắng và mọi `/api/*` đều trả về HTML.
+
+### Cách 1 — Deploy từ máy local
+
+1. Đăng nhập và tạo tài nguyên (chỉ làm một lần):
 
 ```bash
 npx wrangler login
@@ -139,7 +152,7 @@ npx wrangler d1 create bank9-db
 npx wrangler r2 bucket create bank9-images
 ```
 
-2. Cập nhật `database_id` trong `wrangler.jsonc` bằng ID do lệnh `d1 create` trả về.
+2. Cập nhật `database_id` trong `wrangler.jsonc` bằng ID do lệnh `d1 create` trả về. (Repo để ID giả `00000000-...` cho tiện chạy local; deploy với ID giả sẽ lỗi.)
 
 3. Đặt secret cho môi trường production (không dùng giá trị demo):
 
@@ -156,13 +169,36 @@ npm run db:migrate:remote
 npm run db:seed:remote
 ```
 
-5. Deploy:
+5. Kiểm tra cấu hình rồi deploy:
 
 ```bash
+npm run deploy:check
 npm run deploy
 ```
 
+`deploy:check` sẽ báo lỗi rõ ràng nếu `database_id` vẫn còn là ID giả. Sau khi deploy, Worker chạy tại `https://bank9-tech.<tài-khoản>.workers.dev` (hoặc domain gắn trong dashboard).
+
+### Cách 2 — Deploy tự động từ GitHub (Workers Builds)
+
+1. Cloudflare dashboard → **Workers & Pages** → **Create** → **Workers** → **Connect to Git** (không chọn Pages).
+2. Chọn repo `Bank-9-group`, branch `main`.
+3. Build command: `npm run build`; Deploy command: `npm run deploy`.
+4. Tạo D1/R2 và cập nhật `database_id` như Cách 1; thêm `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `SESSION_SECRET` trong **Settings → Variables and Secrets**.
+5. Mỗi lần push lên `main`, Cloudflare build và deploy lại.
+
+Nếu repo đã có project Pages `bank-9-group` (trang `bank-9-group.pages.dev`), hãy xóa project đó trong dashboard — nó không thể chạy backend Worker/D1/R2 của app này.
+
 `ENVIRONMENT` trong `wrangler.jsonc` là `production`. Khi chạy local, `.dev.vars` ghi đè thành `development`.
+
+### Lỗi deploy thường gặp
+
+| Hiện tượng | Nguyên nhân / cách sửa |
+| --- | --- |
+| `pages.dev` trắng trang | Đang deploy bằng Pages. Chuyển sang Worker (Cách 1 hoặc 2), xóa project Pages. |
+| `Couldn't find a D1 DB with ID ...` | `database_id` trong `wrangler.jsonc` vẫn là ID giả hoặc chưa tạo D1. Chạy `npx wrangler d1 create bank9-db` rồi cập nhật ID. |
+| Mở web được nhưng API 500 / không có sản phẩm | Chưa chạy `npm run db:migrate:remote` + `npm run db:seed:remote`, hoặc thiếu secret production. |
+| Đăng nhập admin thất bại | Chưa đặt `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `SESSION_SECRET` bằng `wrangler secret put`. |
+| Upload ảnh lỗi | Chưa tạo bucket R2 `bank9-images` hoặc binding không khớp. |
 
 Lưu ý free plan: mỗi request có giới hạn CPU, cron chạy mỗi 5 phút. Ảnh demo là SVG tĩnh trong `public/seed/`; ảnh admin upload nằm trong R2.
 
