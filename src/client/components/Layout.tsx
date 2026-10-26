@@ -68,7 +68,7 @@ export function Layout() {
               <input
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
-                placeholder="Tìm iPhone, laptop, PC..."
+                placeholder="    Tìm iPhone, laptop, PC..."
                 className="input pl-9"
                 aria-label="Tìm kiếm sản phẩm"
               />
