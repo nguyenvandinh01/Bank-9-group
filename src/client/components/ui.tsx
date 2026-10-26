@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { Loader2, ShoppingCart } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
 
@@ -19,16 +19,40 @@ export function EmptyState({
   title,
   description,
   action,
+  icon,
 }: {
   title: string;
   description?: string;
   action?: ReactNode;
+  icon?: ReactNode;
 }) {
   return (
-    <div className="card flex flex-col items-center gap-3 px-6 py-14 text-center">
-      <p className="text-base font-semibold text-slate-800">{title}</p>
-      {description ? <p className="max-w-md text-sm text-slate-500">{description}</p> : null}
+    <div className="card flex flex-col items-center gap-4 px-6 py-16 text-center">
+      <div className="grid h-16 w-16 place-items-center rounded-2xl bg-brand-50 text-brand-600">
+        {icon ?? <ShoppingCart className="h-7 w-7" />}
+      </div>
+      <div className="space-y-1">
+        <p className="text-lg font-bold text-slate-900">{title}</p>
+        {description ? <p className="max-w-md text-sm text-slate-500">{description}</p> : null}
+      </div>
       {action}
+    </div>
+  );
+}
+export function Skeleton({ className }: { className?: string }) {
+  return <div className={cn("skeleton", className)} />;
+}
+
+export function SkeletonCard() {
+  return (
+    <div className="card overflow-hidden">
+      <Skeleton className="aspect-square w-full rounded-none" />
+      <div className="space-y-2 p-4">
+        <Skeleton className="h-3 w-1/3" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="mt-2 h-5 w-1/2" />
+      </div>
     </div>
   );
 }

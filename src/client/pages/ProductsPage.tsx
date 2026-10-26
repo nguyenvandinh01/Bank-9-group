@@ -6,7 +6,7 @@ import { api, buildQuery } from "../lib/api";
 import type { Brand, Category, ProductListPayload } from "../../shared/types";
 import { ProductCard } from "../components/ProductCard";
 import { Pagination } from "../components/Pagination";
-import { EmptyState, PageLoader } from "../components/ui";
+import { EmptyState, SkeletonCard } from "../components/ui";
 import { formatVND } from "../lib/format";
 import { cn } from "../lib/cn";
 
@@ -258,7 +258,11 @@ export function ProductsPage() {
           </div>
 
           {isLoading ? (
-            <PageLoader />
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <SkeletonCard key={index} />
+              ))}
+            </div>
           ) : !data || data.items.length === 0 ? (
             <EmptyState
               title="Không tìm thấy sản phẩm"

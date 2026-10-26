@@ -36,13 +36,13 @@ export function Layout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-xl">
         <div className="container-page flex h-16 items-center gap-4">
-          <Link to="/" className="flex items-center gap-2 text-lg font-black text-slate-900">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-slate-900 text-brand-400">
+          <Link to="/" className="flex items-center gap-2.5 text-lg font-black text-slate-900">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-slate-900 to-slate-700 text-brand-400 shadow-sm ring-1 ring-white/10">
               B9
             </span>
-            <span className="hidden sm:inline">Bank9 Tech</span>
+            <span className="hidden sm:inline tracking-tight">Bank9 Tech</span>
           </Link>
 
           <nav className="hidden items-center gap-1 lg:flex">
@@ -139,7 +139,7 @@ export function Layout() {
         <Outlet />
       </main>
 
-      <footer className="mt-16 border-t border-slate-200 bg-slate-900 text-slate-300">
+      <footer className="mt-16 border-t border-slate-200/60 bg-gradient-to-b from-slate-900 to-slate-950 text-slate-300">
         <div className="container-page grid gap-8 py-12 md:grid-cols-4">
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-lg font-black text-white">

@@ -18,17 +18,17 @@ export function ProductCard({ product, className }: Props) {
     <Link
       to={`/san-pham/${product.slug}`}
       className={cn(
-        "group card flex flex-col overflow-hidden transition hover:-translate-y-1 hover:shadow-lg",
+        "group card card-hover flex flex-col overflow-hidden",
         className,
       )}
     >
-      <div className="relative aspect-square overflow-hidden bg-slate-100">
+      <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
         {product.imageUrl ? (
           <img
             src={product.imageUrl}
             alt={product.name}
             loading="lazy"
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-slate-400">
@@ -36,12 +36,12 @@ export function ProductCard({ product, className }: Props) {
           </div>
         )}
         {discount ? (
-          <span className="absolute left-3 top-3 rounded-lg bg-rose-600 px-2 py-1 text-xs font-bold text-white">
+          <span className="absolute left-3 top-3 rounded-full bg-gradient-to-r from-rose-500 to-rose-600 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
             -{discount}%
           </span>
         ) : null}
         {soldOut ? (
-          <span className="absolute inset-x-0 bottom-0 bg-slate-900/75 py-2 text-center text-sm font-semibold text-white">
+          <span className="absolute inset-x-0 bottom-0 bg-slate-900/80 py-2 text-center text-sm font-semibold text-white backdrop-blur">
             Hết hàng
           </span>
         ) : null}

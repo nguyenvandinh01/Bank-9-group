@@ -29,8 +29,9 @@ export function HomePage() {
 
   return (
     <div className="space-y-14 pb-4">
-      <section className="bg-slate-900 text-white">
-        <div className="container-page grid gap-10 py-14 lg:grid-cols-2 lg:items-center lg:py-20">
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-brand-900 text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.18),transparent_55%)]" />
+        <div className="container-page relative grid gap-10 py-16 lg:grid-cols-2 lg:items-center lg:py-24">
           <div className="space-y-6">
             <span className="badge bg-brand-500/15 text-brand-300 ring-1 ring-brand-500/30">
               Công nghệ chính hãng · Demo TMĐT
